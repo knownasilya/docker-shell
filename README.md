@@ -6,12 +6,14 @@ Run shell commands in a running Docker container
 
 ```js
 const DockerShell = require('docker-shell')
-const shell = new DockerShell()
+const shell = new DockerShell({
+  // default options
+  containerImage: 'node:alpine'
+})
 const packageName = 'ember-cli'
 
 shell.run(`npm install -g ${packageName}`)
   .then(({ kill, container }) => {
     kill()
-    // or save container for more commands, `shell.run(command, container)`
   })
 ```

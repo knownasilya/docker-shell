@@ -1,14 +1,34 @@
 'use strict';
 
-const async = require('async');
-const debug = require('debug')('docker-shell:links');
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.parseLink = parseLink;
+exports.filterContainers = filterContainers;
+exports.findLabeledContainers = findLabeledContainers;
+exports.findLabeledContainer = findLabeledContainer;
+exports.resolveLinks = resolveLinks;
+
+var _bluebird = require('bluebird');
+
+var _bluebird2 = _interopRequireDefault(_bluebird);
+
+var _debug = require('debug');
+
+var _debug2 = _interopRequireDefault(_debug);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+const debug = (0, _debug2.default)('docker-shell:links');
 const linkLabels = ['com.docker-shell.link', 'com.docker.compose.service'];
 
-// Parse docker link syntax into sanitized name, alias pair
-// e.g. redis:db  -> [redis, db]
-//      mongo     -> [mongo, mongo]
-//      /db_1     -> [db_1, db_1]
-// Returns undefined on parse failure
+/**
+ * Parse docker link syntax into sanitized name, alias pair
+ * e.g. redis:db  -> [redis, db]
+ *     mongo     -> [mongo, mongo]
+ *     /db_1     -> [db_1, db_1]
+ * Returns undefined on parse failure
+ */
 function parseLink(link) {
   if (typeof link !== 'string') return;
 
@@ -24,85 +44,93 @@ function parseLink(link) {
   return [name, alias];
 }
 
-// List all containers matching a label = value filter
-function filterContainers(docker, label, value, done) {
+/**
+ * List all containers matching a label = value filter
+ *
+ * @returns {Promise}
+ */
+function filterContainers(docker, label, value) {
   const opts = {
     filters: JSON.stringify({
       label: [`${label}=${value}`]
     })
   };
-  docker.listContainers(opts, done);
+
+  return docker.listContainers(opts);
 }
 
-// Find the first label with containers matching value and return the containers
-// Errors are considered a non-match and are never returned.
-// Callback is called with undefined if no labels matched any containers.
-function findLabeledContainers(docker, labels, value, done) {
+/**
+ * Find the first label with containers matching value and return the containers
+ * Errors are considered a non-match and are never returned.
+ * Callback is called with undefined if no labels matched any containers.
+ */
+function findLabeledContainers(docker, labels, value) {
   // Hack reduce error to work like find
-  async.reduce(labels, undefined, (found, label, done) => {
-    filterContainers(docker, label, value, (err, containers) => {
-      if (found) return done(found);
+  debugger;
+  return _bluebird2.default.race(labels.map(label => {
+    return filterContainers(docker, label, value).then(containers => {
       if (containers && containers.length > 0) {
         debug('[runner:docker] found containers with label', label);
-        return done(containers);
+        return containers;
       }
       debug('[runner:docker] no containers with label', label);
-      done();
     });
-  }, containers => {
-    done(undefined, containers);
-  });
+  }));
 }
 
-// Find the first label with a container matching value and return the container
-// Errors are considered a non-match and are never returned.
-// Callback is called with undefined if no labels matched any container.
-function findLabeledContainer(docker, labels, value, done) {
-  findLabeledContainers(docker, labels, value, (err, containers) => {
+/**
+ * Find the first label with a container matching value and return the container
+ * Errors are considered a non-match and are never returned.
+ * Callback is called with undefined if no labels matched any container.
+ */
+function findLabeledContainer(docker, labels, value) {
+  return findLabeledContainers(docker, labels, value).then(containers => {
     if (containers && containers.length > 0) {
-      return done(undefined, containers[0]);
+      return containers[0];
     }
-    done();
   });
 }
 
-// Resolves strider docker runner links into docker links using names and labels
-// First checks for a container with the given name, then searches for
-// the first container matching a set of predefined labels.
-// Callback called with an error if the link cannot be parsed or no matching
-// container is found.
-function resolveLinks(docker, links, done) {
-  async.map(links, function (link, done) {
-
+/**
+ * Resolves strider docker runner links into docker links using names and labels
+ * First checks for a container with the given name, then searches for
+ * the first container matching a set of predefined labels.
+ * Callback called with an error if the link cannot be parsed or no matching
+ * container is found.
+ */
+function resolveLinks(docker, links) {
+  return _bluebird2.default.map(links, link => {
     let parsed = parseLink(link);
-    if (!parsed) return done(new Error(`Invalid link: ${link}`));
 
-    function resolve(name) {
-      const resolved = [name, parsed[1]].join(':');
-      debug('[runner:docker] resolved link', link, resolved);
-      return done(undefined, resolved);
+    if (!parsed) {
+      return _bluebird2.default.reject(new Error(`Invalid link: ${link}`));
     }
+
+    const name = parsed[0];
 
     // Try to find a container by name (or id)
-    const name = parsed[0];
-    docker.getContainer(name).inspect((err, container) => {
-      if (!err && container) return resolve(name);
+    return docker.getContainer(name).inspect().then(container => {
+      if (container) {
+        const resolved = [name, parsed[1]].join(':');
+        debug('[runner:docker] resolved link', link, resolved);
+        return resolved;
+      }
+
       debug('[runner:docker] no container with name', name);
       // Try to find a container by label
-      findLabeledContainer(docker, linkLabels, name, (err, container) => {
-        if (!err && container) return resolve(container.Id);
+      return findLabeledContainer(docker, linkLabels, name).then(container => {
+        if (container) {
+          let resolved = [name, parsed[1]].join(':');
+          debug('[runner:docker] resolved link', link, resolved);
+          return resolved;
+        }
+
         debug('[runner:docker] no container with label', name);
-        done(new Error(`No container found for link: ${link}`));
+      }).catch(err => {
+        debug('[runner:docker] errored finding labeled container');
+        return _bluebird2.default.reject(new Error(`No container found for link: ${link}`));
       });
     });
-  }, done);
+  });
 }
-
-module.exports = {
-  parseLink: parseLink,
-  filterContainers: filterContainers,
-  findLabeledContainers: findLabeledContainers,
-  findLabeledContainer: findLabeledContainer,
-  resolveLinks: resolveLinks
-};
 //# sourceMappingURL=links.js.map

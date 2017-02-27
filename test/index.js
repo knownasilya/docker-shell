@@ -1,4 +1,4 @@
-const DockerShell = require('../dist')
+const DockerShell = require('../dist').default;
 const shell = new DockerShell()
 
 shell.run('echo "hi"')
