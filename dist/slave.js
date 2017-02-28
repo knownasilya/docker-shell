@@ -24,7 +24,6 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 const debug = (0, _debug2.default)('docker-shell:slave');
 
 function createSlave(docker, config) {
-  debugger;
   return (0, _links.resolveLinks)(docker, config.docker_links || []).then(links => {
     debug('Creating container...');
     return (0, _createContainer2.default)({

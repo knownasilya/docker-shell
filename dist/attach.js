@@ -33,8 +33,10 @@ const debug = (0, _debug2.default)('docker-shell:attach');
 
 function attach(container, started) {
   return container.attach({
-    stream: true, stdin: true,
-    stdout: true, stderr: true
+    stream: true,
+    stdin: true,
+    stdout: true,
+    stderr: true
   }).then(streamc => {
     if (!streamc) return _bluebird2.default.reject(new Error('Failed to attach container stream'));
 
@@ -86,6 +88,10 @@ function attach(container, started) {
     var stdout = new _stream2.default.PassThrough();
     var stderr = new _stream2.default.PassThrough();
     const demux = (0, _demuxer2.default)(streamc, stdout, stderr);
+
+    stderr.pipe(_eventStream2.default.split()).pipe(_eventStream2.default.parse()).pipe(_eventStream2.default.mapSync(function (data) {
+      debug('got an err event', data);
+    }));
 
     stdout.pipe(_eventStream2.default.split()).pipe(_eventStream2.default.parse()).pipe(_eventStream2.default.mapSync(function (data) {
       debug('got an event', data);
