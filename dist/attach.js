@@ -33,6 +33,7 @@ const debug = (0, _debug2.default)('docker-shell:attach');
 
 function attach(container, started) {
   return container.attach({
+    logs: true,
     stream: true,
     stdin: true,
     stdout: true,
@@ -45,13 +46,17 @@ function attach(container, started) {
       // start, and wait for it to be done
       return container.start().then(() => {
         debug('started container');
-        container.wait().then(res => {
-          debug('done with container, success', res);
-          container.stop();
-        }).catch(err => {
-          debug('done with container, erred', err);
-          container.stop();
-        });
+        /*
+                container.wait()
+                  .then((res) => {
+                    debug('done with container, success', res);
+                    container.stop();
+                  })
+                  .catch((err) => {
+                    debug('done with container, erred', err);
+                    container.stop();
+                  });
+        */
       }).then(() => {
         return {
           spawn: spawn.bind(null, streamc),
@@ -76,6 +81,7 @@ function attach(container, started) {
   }
 
   function spawn(streamc, command, args, options) {
+    debugger;
     const proc = new _events.EventEmitter();
 
     proc.kill = function () {
@@ -111,7 +117,9 @@ function attach(container, started) {
     debug('running command', command);
     debug('with args', args);
 
-    streamc.write(`${JSON.stringify({ command: command, args: args, type: 'start' })}\n`);
+    setTimeout(function () {
+      streamc.write(`${JSON.stringify({ command: command, args: args, type: 'start' })}\n`);
+    }, 500);
 
     return proc;
   }

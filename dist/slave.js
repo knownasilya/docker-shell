@@ -32,7 +32,7 @@ function createSlave(docker, config) {
       AttachStdout: true,
       AttachStderr: true,
       OpenStdin: true,
-      Tty: false,
+      Tty: true,
       name: config.name,
       Binds: config.docker_volumeBinds,
       Links: links,
