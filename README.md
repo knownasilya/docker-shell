@@ -17,3 +17,9 @@ shell.run(`npm install -g ${packageName}`)
     kill()
   })
 ```
+
+## Run Tests
+
+```bash
+DOCKER_IP=<docker_ip> DEBUG=docker-shell:* npm test
+```
