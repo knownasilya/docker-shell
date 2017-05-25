@@ -87,14 +87,37 @@ function attach(container, started) {
     proc.kill = function () {
       streamc.write(`${JSON.stringify({ type: 'kill' })}\n`);
     };
-    proc.stdout = new _stream2.default.PassThrough();
-    proc.stderr = new _stream2.default.PassThrough();
+    proc.stdout = new _stream2.default.Transform({
+      transform(chunk, _, next) {
+        debug('proc.stdout', chunk.toString());
+        this.push(chunk);
+        next();
+      }
+    });
+    proc.stderr = new _stream2.default.Transform({
+      transform(chunk, _, next) {
+        debug('proc.stderr', chunk.toString());
+        this.push(chunk);
+        next();
+      }
+    });
     proc.stdin = streamc;
 
-    var stdout = new _stream2.default.PassThrough();
-    var stderr = new _stream2.default.PassThrough();
+    var stdout = new _stream2.default.Transform({
+      transform(chunk, _, next) {
+        debug('stdout', chunk.toString());
+        this.push(chunk);
+        next();
+      }
+    });
+    var stderr = new _stream2.default.Transform({
+      transform(chunk, _, next) {
+        debug('stderr', chunk.toString());
+        this.push(chunk);
+        next();
+      }
+    });
     const demux = (0, _demuxer2.default)(streamc, stdout, stderr);
-
     stderr.pipe(_eventStream2.default.split()).pipe(_eventStream2.default.parse()).pipe(_eventStream2.default.mapSync(function (data) {
       debug('got an err event', data);
     }));
@@ -109,7 +132,7 @@ function attach(container, started) {
       }
       if (data.event === 'exit') {
         proc.emit('exit', data.code);
-        streamc.removeListener('readable', demux);
+        streamc.unpipe(demux);
         stdout.unpipe();
       }
     }));
@@ -118,6 +141,7 @@ function attach(container, started) {
     debug('with args', args);
 
     setTimeout(function () {
+      debug('running for real');
       streamc.write(`${JSON.stringify({ command: command, args: args, type: 'start' })}\n`);
     }, 500);
 

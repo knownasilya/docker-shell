@@ -4,6 +4,9 @@ const shell = new DockerShell()
 shell.run('echo "hi"')
   .then((res) => {
     console.log('done')
-    res.kill()
+    shell.destroy()
   })
-  .catch((err) => console.log(err))
+  .catch((err) => {
+    console.log(err)
+    shell.destroy()
+  })

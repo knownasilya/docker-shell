@@ -20,9 +20,15 @@ var _run = require('./run');
 
 var _run2 = _interopRequireDefault(_run);
 
+var _debug = require('debug');
+
+var _debug2 = _interopRequireDefault(_debug);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _asyncToGenerator(fn) { return function () { var gen = fn.apply(this, arguments); return new Promise(function (resolve, reject) { function step(key, arg) { try { var info = gen[key](arg); var value = info.value; } catch (error) { reject(error); return; } if (info.done) { resolve(value); } else { return Promise.resolve(value).then(function (value) { step("next", value); }, function (err) { step("throw", err); }); } } return step("next"); }); }; }
+
+const debug = (0, _debug2.default)('docker-shell:index');
 
 class DockerShell {
   constructor(options = {}) {
@@ -41,39 +47,44 @@ class DockerShell {
 
       try {
         if (_this.container) {
-          console.log('has container');
+          debug('has container');
           slave = yield (0, _attach2.default)(_this.container, true);
         } else {
-          console.log('new container');
+          debug('new container');
           let docker = yield (0, _init2.default)({});
 
           slave = yield (0, _slave2.default)(docker, {
             image: _this.containerImage
           });
         }
-        console.log('created container');
-        console.log(slave.container);
+        debug('created container');
+        //console.log(slave.container);
       } catch (e) {
         throw e;
       }
 
+      _this.kill = slave.kill.bind(null, function () {
+        console.log('killed container');
+      }, slave.container);
+
       let split = cmd.split(' ');
       let command = split[0];
       let args = split.slice(1);
-
+      debug('about to run');
       let code = yield (0, _run2.default)(slave.spawn, command, args);
+      debug('ran', code);
       let error = code > 0;
 
       if (error) {
         throw new Error(`exited with code ${code}`);
       }
-
-      return {
-        kill: kill.bind(null, function () {
-          console.log('killed container');
-        }, slave.container)
-      };
     })();
+  }
+
+  destroy() {
+    if (this.kill) {
+      this.kill();
+    }
   }
 }
 
