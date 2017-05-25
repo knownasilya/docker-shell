@@ -10,11 +10,10 @@ const shell = new DockerShell({
   // default options
   containerImage: 'node:alpine'
 })
-const packageName = 'ember-cli'
 
-shell.run(`npm install -g ${packageName}`)
-  .then(({ kill, container }) => {
-    kill()
+shell.run('echo "hi"')
+  .then(() => {
+    shell.destroy()
   })
 ```
 
