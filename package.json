@@ -18,9 +18,9 @@
     "async": "^2.0.1",
     "bluebird": "^3.4.7",
     "debug": "^2.2.0",
-    "dockerode": "^2.3.1",
+    "dockerode": "^2.5.0",
     "dockerode-optionator": "^1.1.4",
-    "dockerode-promise": "^1.1.0",
+    "dockerode-promise-es6": "^1.1.0",
     "event-stream": "^3.3.4"
   },
   "devDependencies": {

@@ -32,10 +32,6 @@ const debug = (0, _debug2.default)('docker-shell:index');
 
 class DockerShell {
   constructor(options = {}) {
-    if (!process.env.DOCKER_IP) {
-      throw new Error('Need to specify (at least) DOCKER_IP env variable');
-    }
-
     this.containerImage = options.containerImage || 'node:alpine';
   }
 

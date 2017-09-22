@@ -9,6 +9,8 @@ exports.default = function (rawOpts) {
     const options = _dockerUtil2.default.normalizeOptions(rawOpts, process.env);
     const dockerDomain = _domain2.default.create();
 
+    options.version = 'v1.30';
+
     dockerDomain.on('error', e => {
       e.connectOptions = options;
       reject(e);
@@ -16,7 +18,7 @@ exports.default = function (rawOpts) {
 
     dockerDomain.run(() => {
       try {
-        const docker = new _dockerodePromise2.default(options);
+        const docker = new _dockerodePromiseEs2.default(options);
 
         docker.listContainers().then(() => {
           resolve(docker);
@@ -36,9 +38,9 @@ var _bluebird = require('bluebird');
 
 var _bluebird2 = _interopRequireDefault(_bluebird);
 
-var _dockerodePromise = require('dockerode-promise');
+var _dockerodePromiseEs = require('dockerode-promise-es6');
 
-var _dockerodePromise2 = _interopRequireDefault(_dockerodePromise);
+var _dockerodePromiseEs2 = _interopRequireDefault(_dockerodePromiseEs);
 
 var _domain = require('domain');
 
