@@ -3,7 +3,7 @@ const shell = new DockerShell({
   containerImage: 'mhart/alpine-node'
 })
 
-shell.run('node --version\n')
+shell.run('node --version\nexit\n')
   .then((res) => {
     console.log('done')
     shell.destroy()
