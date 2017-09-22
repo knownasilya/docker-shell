@@ -4,7 +4,7 @@ const Bluebird = require('bluebird');
 
 module.exports = function run(spawn, command, args) {
   return new Bluebird((resolve, reject) => {
-    spawn(command, args, {}, function (err, proc) {
+    spawn(command, function (err, proc) {
       if (err) {
         return reject(err);
       }

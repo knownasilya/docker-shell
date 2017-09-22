@@ -67,12 +67,17 @@ class DockerShell {
       let command = split[0];
       let args = split.slice(1);
       debug('about to run');
-      let code = yield (0, _run2.default)(slave.spawn, command, args);
-      debug('ran', code);
-      let error = code > 0;
+      try {
+        let code = yield (0, _run2.default)(slave.spawn, command, args);
+        debug('ran', code);
+        let error = code > 0;
 
-      if (error) {
-        throw new Error(`exited with code ${code}`);
+        if (error) {
+          throw new Error(`exited with code ${code}`);
+        }
+      } catch (e) {
+        console.log(e);
+        throw e;
       }
     })();
   }

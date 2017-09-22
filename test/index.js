@@ -1,7 +1,7 @@
 const DockerShell = require('../dist').default;
 const shell = new DockerShell()
 
-shell.run('echo "hi"')
+shell.run('console.log("hello")\n')
   .then((res) => {
     console.log('done')
     shell.destroy()
