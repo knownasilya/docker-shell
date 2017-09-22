@@ -1,7 +1,9 @@
 const DockerShell = require('../dist').default;
-const shell = new DockerShell()
+const shell = new DockerShell({
+  containerImage: 'mhart/alpine-node'
+})
 
-shell.run('console.log("hello")\n')
+shell.run('node --version\n')
   .then((res) => {
     console.log('done')
     shell.destroy()

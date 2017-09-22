@@ -63,12 +63,9 @@ class DockerShell {
         console.log('killed container');
       }, slave.container);
 
-      let split = cmd.split(' ');
-      let command = split[0];
-      let args = split.slice(1);
       debug('about to run');
       try {
-        let code = yield (0, _run2.default)(slave.spawn, command, args);
+        let code = yield (0, _run2.default)(slave.spawn, cmd);
         debug('ran', code);
         let error = code > 0;
 
